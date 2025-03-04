@@ -1,0 +1,10 @@
+version: '3.7'
+services:
+    nfvprime_postgres:
+      build: 
+         context: ./Postgres
+      ports:
+         - "5433:5432"
+      volumes: 
+         - "./nfvprime_postgres/data:/var/lib/postgresql/data"
+      container_name: nfvprime_postgres

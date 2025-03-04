@@ -10,7 +10,7 @@ conn = psycopg2.connect(
     database="postgres",
     user="postgres",
     password="postgres",
-    port="5432")
+    port="5433")
 
 dummies = {}
 user_id = ''

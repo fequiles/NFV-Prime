@@ -10,7 +10,7 @@ conn = psycopg2.connect(
     database="postgres",
     user="postgres",
     password="postgres",
-    port="5432")
+    port="5433")
 
 dummies = {}
 user_id = ''
@@ -108,8 +108,8 @@ def thread_ListenPort(thread_name, ip):
     while 1:
         contentReceived, client = clientSocket.recvfrom(65535)
 
-clientSocket = socketStart(:dummyHostName)
-client_interface = :dummyHostIp
+clientSocket = socketStart("veth-h1")
+client_interface = "10.0.1.101"
 
 semaphore = threading.Semaphore(1)
 timer = threading.Thread(target=thread_Time, args=('timer', 1, client_interface))
@@ -124,7 +124,7 @@ while 1:
     ipOrigem, ipDestino, dados = ipPacketData(carga_util)
     size = len(contentReceived)
     semaphore.acquire()
-    if ipDestino == :dummyHostIp:
+    if ipDestino == "10.0.1.101":
         # print('{} -> {}, tam: {}'.format(ipOrigem, ipDestino, size))
         iRx = iRx + size
     # if ipOrigem == "10.0.1.102":

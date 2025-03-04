@@ -10,7 +10,7 @@ conn = psycopg2.connect(
     database="postgres",
     user="postgres",
     password="postgres",
-    port="5432")
+    port="5433")
 
 dummies = {}
 user_id = ''
@@ -102,9 +102,9 @@ def cleanInterfacesRxTx():
 
 interval = 1
 
-clientSocket = socketStart("veth-n5")
-nsIp = "10.0.2.105"
-hostIp = "10.0.1.105"
+clientSocket = socketStart("veth-n1")
+nsIp = "10.0.2.101"
+hostIp = "10.0.1.101"
 
 semaphore = threading.Semaphore(1)
 timer = threading.Thread(target=thread_Time, args=('timer', interval))

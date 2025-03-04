@@ -1,16 +1,16 @@
 from socket import *
 import struct
 import binascii
-import psycopg2
 import threading #thread module imported
-import time
+import time #time module
+import psycopg2
 
 conn = psycopg2.connect(
-    host="10.1.1.100",
+    host="localhost",
     database="postgres",
     user="postgres",
     password="postgres",
-    port="5432")
+    port="5433")
 
 dummies = {}
 user_id = ''
@@ -47,22 +47,19 @@ def ipPacketData(data):
     ip_destiny = inet_ntoa(ip_data_tuple[9])
 
     header_size_bytes = (version & 15) * 4
-    return ip_origin, ip_destiny, data[header_size_bytes:]
-
-def socketStart(net_interface):
-    Socket = socket(AF_PACKET, SOCK_RAW, htons(3))
-    Socket.bind((net_interface, 0))
-    return Socket
+    return ip_origin, ip_destiny
 
 def limpaRxTx():
-    global user_id
+    global dummiesRx, user_id
     if (user_id != ''):
         cleanInterfacesRxTx() 
 
 def thread_Time(thread_name, interval):
-    global dummies, user_id
+    global dummiesRx, user_id
     while 1:
         semaphore.acquire()
+        # if (user_id != ''):
+        #     cleanDbInterfacesRxTx(user_id) 
         for dummy in dummies:
             try:
                 uId, iId = getInterfaceIdsByHost(dummy)
@@ -79,7 +76,7 @@ def getInterfaceIdsByHost(host):
     interfaceId = 1
     curs_obj = conn.cursor()
 
-    curs_obj.execute("SELECT user_id, interface_id as id FROM user_interfaces WHERE interface_host_ip = '{}'".format(host))
+    curs_obj.execute("SELECT user_id, interface_id as id FROM user_interfaces WHERE interface_host = '{}'".format(host))
     rows = curs_obj.fetchall()
     uId = rows[0][userId] if rows[0][userId] != None else 0
     iId = rows[0][interfaceId] if rows[0][interfaceId] != None else 0
@@ -88,10 +85,10 @@ def getInterfaceIdsByHost(host):
     return uId, iId
 
 def updateInterfaceRxTx(uId, iId, rx, tx):
-    # print("UPDATE user_interfaces SET interface_tx = interface_tx + {}, interface_rx = interface_rx + {} WHERE user_id = {} AND interface_id = {}".format(tx, rx, uId, iId))
+    print("UPDATE user_interfaces SET interface_tx = interface_tx + {}, interface_rx = interface_rx + {} WHERE user_id = {} AND interface_id = {}".format(tx, rx, uId, iId))
     curs_obj = conn.cursor()
 
-    curs_obj.execute("UPDATE user_interfaces SET interface_tx = coalesce(interface_tx,0) + {}, interface_rx = coalesce(interface_rx,0) + {} WHERE user_id = {} AND interface_id = {}".format(tx, rx, uId, iId))
+    curs_obj.execute("UPDATE user_interfaces SET interface_tx = interface_tx + {}, interface_rx = interface_rx + {} WHERE user_id = {} AND interface_id = {}".format(tx, rx, uId, iId))
     conn.commit()
     curs_obj.close()
 
@@ -100,27 +97,38 @@ def cleanInterfacesRxTx():
         dummies[dummy]['rx'] = 0
         dummies[dummy]['tx'] = 0
 
-interval = 1
-
-clientSocket = socketStart("veth-n1")
-nsIp = "10.0.2.101"
-hostIp = "10.0.1.101"
+interval = 0.1
 
 semaphore = threading.Semaphore(1)
 timer = threading.Thread(target=thread_Time, args=('timer', interval))
 timer.start()
 
-while 1:
-    contentReceived = clientSocket.recv(65535)
+sniffer = socketStart('veth4cb847d')
+while True:
+    contentReceived = sniffer.recv(65535)
     mac_destino, mac_fonte, protocolo, carga_util = unpackFrameEthernet(contentReceived)
-    ipOrigem, ipDestino, dados = ipPacketData(carga_util)
-    size = len(dados) - 8
-    if '10.0.1.' in ipDestino:
-        print('{} -> {}, tam: {}'.format(ipOrigem, ipDestino, size))
+    ipOrigem, ipDestino = ipPacketData(carga_util)
+    size = len(contentReceived)
+    if "10.0.0.1" in ipDestino:
+        # print(ipDestino + " " + str(size) + " " + str(time.time()))
         semaphore.acquire()
-        if (dummies.get(hostIp)):
-            dummies[hostIp]['rx'] += size
+        if (dummies.get(ipDestino)):
+            dummies[ipDestino]['rx'] += size
         else:
-            dummy = {hostIp:{'rx': size, 'tx': 0}}
+            dummy = {ipDestino:{'rx': size, 'tx':0}}
             dummies.update(dummy)
+            # dummies[ipDestino].rx = size
+            # dummies[ipDestino].tx = 0
         semaphore.release()
+    if "10.0.0.1" in ipOrigem:
+        semaphore.acquire()
+        if (dummies.get(ipOrigem)):
+            dummies[ipOrigem]['tx'] += size
+        else:
+            dummy = {ipOrigem:{'rx': 0, 'tx':size}}
+            dummies.update(dummy)
+            # dummies[ipOrigem].tx = size
+            # dummies[ipOrigem].rx = 0 
+        semaphore.release()
+
+# sudo docker run -d --name generator traffic /bin/bash -c "echo 'Hello World'; sleep infinity" --network="bridge"

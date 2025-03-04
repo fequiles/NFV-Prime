@@ -21,10 +21,12 @@ from routes.program import program_blueprint
 #Global vars
 listProcess = {}
 
-process = subprocess.Popen('sh /home/felipe/Desktop/NFV-Prime/config.sh', shell=True)
+process = subprocess.Popen('sh config_NFV_Prime.sh', shell=True)
 process.wait()
-clientSniffer = 'sudo ip netns exec NFV-client python3 /home/felipe/Desktop/NFV-Prime/Arquivos/dummySnifferClient.py'
-path = '/home/felipe/Desktop/NFV-Prime/Arquivos/sniffers'
+process = subprocess.Popen('sh config_NFV_Client.sh', shell=True)
+process.wait()
+clientSniffer = 'ip netns exec NFV-client python3 /python-docker/Arquivos/dummySnifferClient.py'
+path = '/python-docker/Arquivos/sniffers'
 output_file = open(path + '/errorClientSniffers.txt', 'w+')
 thread = ThreadWithReturnValue(target=hl.executeProgramArmazenaPid, args=(conn, 0, clientSniffer, output_file, "sniffer_client", "snif_client"))
 thread.start()
@@ -90,7 +92,7 @@ def iniciaGraficos():
             os.mkdir(path)
         userId = ll.getUserIdByUsername(conn, req_data)
         output_file = open(path + '/output.txt', 'w+')
-        comando = "sudo python3 /home/felipe/Desktop/NFV-Prime/Arquivos/networkSniffer.py"
+        comando = "sudo python3 /python-docker/Arquivos/networkSniffer.py"
 
         thread = ThreadWithReturnValue(target=hl.executeProgramArmazenaPidPython, args=(conn, userId, comando, output_file, "graphics", "sniffer_graphics"))
         thread.start()

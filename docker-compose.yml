@@ -1,20 +1,22 @@
 version: '3.7'
 services:
-    nfvprime_postgres:
-        build: 
-           context: ./nfvprime_postgres
-        ports:
-           - "5432:5432"
-        container_name: nfvprime_postgres
+    # nfvprime_postgres:
+    #     build: 
+    #        context: ./Postgres
+    #     ports:
+    #        - "5433:5432"
+    #     container_name: nfvprime_postgres
     nfvprime_api:
-      user: node
       build:
         context: "./NFVPrimeBack"
       image: nfvprime_api:latest
       init: true
+      security_opt:
+        - seccomp:unconfined
+      privileged: true
       container_name: nfvprime_api
       ports:
-          - "23620:8080"
+          - "23620:5000"
       environment:
         - "PGHOST=nfvprime_postgres"
         - "PGUSER=postgres"
@@ -32,4 +34,4 @@ services:
         init: true
         container_name: nfvprime_ui
         ports:
-          - "23621:8080"
+          - "23621:3000"

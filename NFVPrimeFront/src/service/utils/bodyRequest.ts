@@ -1,3 +1,3 @@
 export const body = {
-    username: "fquiles"
+    username: "test_user"
 }

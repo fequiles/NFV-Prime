@@ -44,7 +44,7 @@ def createInterface():
         snifferProgram.write(dummySnifferNamespace)
         snifferProgram.close()
 
-        comando = "sudo ip netns exec NFVPrime python3 /home/felipe/Desktop/NFV-Prime/Arquivos/"+ req_data["username"]+ "/Sniffers/sniffer_" + newInterfaceName + "_namespace.py"
+        comando = "sudo ip netns exec NFVPrime python3 /python-docker/Arquivos/"+ req_data["username"]+ "/Sniffers/sniffer_" + newInterfaceName + "_namespace.py"
         output_file = open(path + '/errorNamespaceSniffers.txt', 'w+')
 
         thread = ThreadWithReturnValue(target=hl.executeProgramArmazenaPidPython, args=(conn, userId, comando, output_file, "sniffer", "snif_" + newInterfaceName + "_ns"))

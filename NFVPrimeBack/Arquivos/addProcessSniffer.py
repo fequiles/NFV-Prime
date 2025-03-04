@@ -9,7 +9,7 @@ conn = psycopg2.connect(
     database="postgres",
     user="postgres",
     password="postgres",
-    port="5432")
+    port="5433")
 
 def updateProcessMemCpu(mem, cpu):
     curs_obj = conn.cursor()

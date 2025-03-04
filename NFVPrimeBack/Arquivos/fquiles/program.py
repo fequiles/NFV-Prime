@@ -113,9 +113,8 @@ n_packet = 0
 if debug:
     n_transmitted = 0
     n_dropped = 0
-    outputFile = open('/home/felipe/Desktop/testesMestrado/dpi.csv', 'a')
-    outputFileTimes = open('/home/felipe/Desktop/testesMestrado/dpiTimes.csv', 'a')
-
+    outputFile = open('./Arquivos/dpi.csv', 'a')
+    outputFileTimes = open('./Arquivos/dpiTimes.csv', 'a')
 
 clientSocket = socketStart('veth-ch0')
 senderSocket_h1 = socketStart('veth-h1')

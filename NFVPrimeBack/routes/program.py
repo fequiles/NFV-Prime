@@ -26,14 +26,14 @@ def postClientProgram():
             program = hl.nfvHeaderWrite(req_data["code"], list(interfaces.values()))
             received_file.write(program)
             received_file.close()
-            comando = "sudo python3 /home/felipe/Desktop/NFV-Prime/Arquivos/"+ req_data["username"]+ "/program.py"
+            comando = "sudo python3 /python-docker/Arquivos/"+ req_data["username"]+ "/program.py"
 
             processName = req_data["processName"]
             thread = ThreadWithReturnValue(target=hl.executeProgramArmazenaPidPython, args=(conn, userId, comando, output_file, "program", processName))
             thread.start()
             processPid = thread.join()
 
-            comando = "sudo python3 /home/felipe/Desktop/NFV-Prime/Arquivos/addProcessSniffer.py " + str(processPid)
+            comando = "sudo python3 /python-docker/Arquivos/addProcessSniffer.py " + str(processPid)
             thread = ThreadWithReturnValue(target=hl.executeProgramArmazenaPidPython, args=(conn, userId, comando, output_file, "process_sniffer", processName))
             thread.start()
 

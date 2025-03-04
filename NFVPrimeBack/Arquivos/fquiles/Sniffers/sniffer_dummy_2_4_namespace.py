@@ -6,11 +6,11 @@ import threading #thread module imported
 import time
 
 conn = psycopg2.connect(
-    host="10.2.1.100",
+    host="10.1.1.100",
     database="postgres",
     user="postgres",
     password="postgres",
-    port="5432")
+    port="5433")
 
 dummies = {}
 user_id = ''
@@ -66,10 +66,8 @@ def thread_Time(thread_name, interval):
         for dummy in dummies:
             try:
                 uId, iId = getInterfaceIdsByHost(dummy)
-                print(uId, iId)
                 user_id = uId
             except:
-                print('Error')
                 break
             updateInterfaceRxTx(uId, iId, dummies[dummy]['rx'], dummies[dummy]['tx'])
         limpaRxTx()
@@ -81,7 +79,7 @@ def getInterfaceIdsByHost(host):
     interfaceId = 1
     curs_obj = conn.cursor()
 
-    curs_obj.execute("SELECT user_id, interface_id as id FROM user_interfaces WHERE interface_namespace_ip = '{}'".format(host))
+    curs_obj.execute("SELECT user_id, interface_id as id FROM user_interfaces WHERE interface_host_ip = '{}'".format(host))
     rows = curs_obj.fetchall()
     uId = rows[0][userId] if rows[0][userId] != None else 0
     iId = rows[0][interfaceId] if rows[0][interfaceId] != None else 0
@@ -90,10 +88,10 @@ def getInterfaceIdsByHost(host):
     return uId, iId
 
 def updateInterfaceRxTx(uId, iId, rx, tx):
-    print("UPDATE user_interfaces SET interface_tx = interface_tx + {}, interface_rx = interface_rx + {} WHERE user_id = {} AND interface_id = {}".format(tx, rx, uId, iId))
+    # print("UPDATE user_interfaces SET interface_tx = interface_tx + {}, interface_rx = interface_rx + {} WHERE user_id = {} AND interface_id = {}".format(tx, rx, uId, iId))
     curs_obj = conn.cursor()
 
-    curs_obj.execute("UPDATE user_interfaces SET interface_tx = coalesce(interface_tx, 0) + {}, interface_rx = coalesce(interface_rx, 0) + {} WHERE user_id = {} AND interface_id = {}".format(tx, rx, uId, iId))
+    curs_obj.execute("UPDATE user_interfaces SET interface_tx = coalesce(interface_tx,0) + {}, interface_rx = coalesce(interface_rx,0) + {} WHERE user_id = {} AND interface_id = {}".format(tx, rx, uId, iId))
     conn.commit()
     curs_obj.close()
 
@@ -102,17 +100,12 @@ def cleanInterfacesRxTx():
         dummies[dummy]['rx'] = 0
         dummies[dummy]['tx'] = 0
 
-def insertOnDatabase():
-    curs_obj = conn.cursor()
-    curs_obj.execute("INSERT INTO user_interfaces(user_id, interface_id, interface_name, interface_host, interface_host_ip, interface_namespace_name, interface_namespace_ip, interface_host_ethernet, interface_ns_ethernet) VALUES(%s, %s, %s, %s, %s, %s , %s, %s, %s)", (0, 0, 'client', 'veth-ch0', '10.2.1.100', 'veth-cn0', '10.2.2.100', '16:1a:a7:f2:ac:36', '16:1a:a7:f2:ac:37'))
-    conn.commit()
-    curs_obj.close()
-
 interval = 1
 
-insertOnDatabase()
-clientSocket = socketStart('veth-cn0')
-nsIp = '10.2.2.100'
+clientSocket = socketStart("veth-n4")
+nsIp = "10.0.2.104"
+hostIp = "10.0.1.104"
+
 semaphore = threading.Semaphore(1)
 timer = threading.Thread(target=thread_Time, args=('timer', interval))
 timer.start()
@@ -122,17 +115,12 @@ while 1:
     mac_destino, mac_fonte, protocolo, carga_util = unpackFrameEthernet(contentReceived)
     ipOrigem, ipDestino, dados = ipPacketData(carga_util)
     size = len(dados) - 8
-    if (ipOrigem == nsIp and '10.0.1.' in ipDestino):
-        print("Origem {} -> Destino {} + Tamanho {}".format(ipOrigem, ipDestino, size))
+    if '10.0.1.' in ipDestino:
+        print('{} -> {}, tam: {}'.format(ipOrigem, ipDestino, size))
         semaphore.acquire()
-        if (dummies.get(ipOrigem)):
-            dummies[ipOrigem]['tx'] += size
+        if (dummies.get(hostIp)):
+            dummies[hostIp]['rx'] += size
         else:
-            dummy = {
-                ipOrigem: {
-                    'rx': 0,
-                    'tx': size
-                }
-            }
+            dummy = {hostIp:{'rx': size, 'tx': 0}}
             dummies.update(dummy)
         semaphore.release()
