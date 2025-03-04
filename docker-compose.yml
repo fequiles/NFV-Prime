@@ -1,0 +1,35 @@
+version: '3.7'
+services:
+    nfvprime_postgres:
+        build: 
+           context: ./nfvprime_postgres
+        ports:
+           - "5432:5432"
+        container_name: nfvprime_postgres
+    nfvprime_api:
+      user: node
+      build:
+        context: "./NFVPrimeBack"
+      image: nfvprime_api:latest
+      init: true
+      container_name: nfvprime_api
+      ports:
+          - "23620:8080"
+      environment:
+        - "PGHOST=nfvprime_postgres"
+        - "PGUSER=postgres"
+        - "PGDATABASE=public"
+        - "PGPASSWORD=postgres"
+        - "PGPORT=5432"
+        - "PORT=8080"
+        - "LOGDIR=./log"
+        - "JWTSECRET=test"
+    nfvprime_ui:
+        user: node
+        build:
+          context: "./NFVPrimeFront"
+        image: nfvprime_ui:latest
+        init: true
+        container_name: nfvprime_ui
+        ports:
+          - "23621:8080"
