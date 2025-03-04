@@ -1,0 +1,108 @@
+:root {
+  /* Backgrounds */
+  --bg-01: #22282d;
+  --bg-02: #dce0e4;
+  --bg-03: #a7b1bc;
+  --bg-04: #fafafa;
+  --bg-05: #347c7f;
+  --bg-06: #ff6969;
+  --bg-07: #ffd166;
+  --bg-08: #64d3d8;
+  --bg-09: #cfed75;
+  --bg-10: #209fcc;
+  --bg-11: #40b0b8;
+  --bg-disabled: #0000000a;
+  --bg-line: linear-gradient(90deg, #b1d12e 0%, #40b0b8 50%, #005178 100%);
+
+  /* buttom */
+  --bg-buttom-01: #347c7f;
+  --bg-buttom-01-hover: #40b0b8;
+
+  /* Fonts */
+  --font-01: "Open Sans", sans-serif;
+  --font-02: "OpenSans-Bold", Helvetica;
+
+  --color-font-01: #7b8a9a;
+  --color-font-02: #347c7f;
+  --color-font-03: #fafafa;
+  --color-font-04: #454f5a;
+  --color-font-05: #22282d;
+  --color-font-06: #566371;
+  --color-font-07: #996b00;
+  --color-font-08: #66791b;
+  --color-font-09: #347c7f;
+  --color-font-10: #ad0005;
+  --color-font-11: #ff4d4f;
+  --color-font-12: #484848;
+  --color-font-13: #4096ff;
+  --color-font-disabled: #00000040;
+
+  --border-color-01: #d9d9d9;
+
+  --shadow-color-01: #f0f0f0;
+  --shadow-color-02: #00000029;
+
+  --font-weight-01: 700;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-01);
+}
+
+.btn-icon {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.ant-table-thead > tr > th {
+  background-color: var(--bg-02) !important;
+  padding: 0.5rem !important;
+  color: var(--color-font-04) !important;
+}
+
+.ant-table-thead > tr > th:first-child {
+  border-radius: 0.5rem 0rem 0rem 0.5rem;
+}
+
+.ant-table-thead > tr > th:last-child {
+  border-radius: 0rem 0.5rem 0.5rem 0rem;
+}
+
+.ant-table-tbody > tr > td {
+  background-color: var(--bg-04);
+  color: #22282d !important;
+  padding: 1.75rem 0.75rem !important;
+}
+
+.ant-table-title {
+  background-color: var(--bg-04);
+  padding: 0;
+}
+
+.ant-table-tbody,
+.ant-table-thead {
+  font-size: 0.75rem;
+}
+
+.ant-table-wrapper
+  .ant-table-thead
+  > tr
+  > th:not(:last-child):not(.ant-table-selection-column):not(
+    .ant-table-row-expand-icon-cell
+  ):not([colspan])::before {
+  position: initial;
+}
+
+.ant-btn-primary:not(:disabled):not(.ant-btn-disabled):hover {
+  background-color: var(--bg-buttom-01-hover);
+}
+
+.ant-btn-default:not(:disabled):not(.ant-btn-disabled):hover {
+  border-color: var(--bg-buttom-01-hover);
+  color: var(--bg-buttom-01-hover);
+}
+

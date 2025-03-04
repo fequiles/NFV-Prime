@@ -1,0 +1,44 @@
+.title-interface {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.card-interface {
+  display: flex;
+  width: 100%;
+}
+
+.card-interface > div {
+  margin: 24px 0 !important;
+  padding: 24px !important;
+  min-height: 280px !important;
+  background: var(--bg-02) !important;
+  border-radius: 16px !important;
+  width: 100% !important;
+}
+
+.actions {
+  display: flex;
+  width: 100%;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 5px;
+}
+
+#btn-stop {
+  background-color: var(--bg-06);
+  color: var(--bg-02);
+}
+
+#btn-start {
+  background-color: var(--bg-05);
+  color: var(--bg-02);
+}
+
+.header-inteface-card {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}

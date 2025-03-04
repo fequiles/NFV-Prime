@@ -1,0 +1,23 @@
+.container-no-content {
+  display: flex;
+  flex-direction: column;
+  width: 50rem;
+  text-align: center;
+  line-height: 2rem;
+  align-items: center;
+}
+
+.container-no-content > span {
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 164%;
+}
+
+.container-no-content > p {
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 164%;
+  gap: 2rem;
+}

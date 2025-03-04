@@ -1,0 +1,25 @@
+.login-label {
+  color: var(--bg-01);
+  font-weight: var(--font-weight-01);
+  margin-bottom: 0.5rem;
+}
+
+.login-buttom {
+  width: 20rem;
+  display: flex;
+  justify-content: center;
+}
+
+.login-form-container {
+  width: 100%;
+}
+
+.login-form {
+  width: 100%;
+}
+
+body {
+  display: flex;
+  width: 100vw;
+  background-color: var(--bg-04);
+}

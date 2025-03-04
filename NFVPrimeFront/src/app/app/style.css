@@ -1,0 +1,29 @@
+.container-app {
+  margin: 1rem;
+  margin-top: 1.5rem;
+  color: var(--color-font-05);
+  gap: 2rem;
+  width: 95%;
+}
+
+.container-app > div > p {
+  font-size: 1rem;
+  color: var(--color-font-04Z);
+}
+
+.container-app > div > h1 > b {
+  font-weight: 900;
+  font-family: "Open Sans", sans-serif;
+}
+
+#new-pgrs-button {
+  display: flex;
+  align-items: center;
+}
+
+#app {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}

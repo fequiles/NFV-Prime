@@ -1,0 +1,32 @@
+.container-error {
+  display: flex;
+  flex-direction: column;
+  width: 50rem;
+  margin-top: 10rem;
+  text-align: center;
+  line-height: 2rem;
+  align-items: center;
+}
+
+.container-error > span {
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 164%;
+}
+
+.container-error > p {
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 164%;
+}
+
+.container-error > p > a {
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 700;
+  text-decoration-line: underline;
+  color: var(--color-font-04);
+  cursor: pointer;
+}

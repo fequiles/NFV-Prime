@@ -1,0 +1,44 @@
+.aling-center {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0rem;
+}
+
+.interface-form-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.double-inputs {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap !important;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.double-inputs > div {
+  width: 100%;
+}
+
+.button-submit {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.list-delete {
+  cursor: pointer;
+  color: var(--color-font-11);
+}
+
+.list-delete:hover {
+  color: var(--color-font-10);
+}
+
+.ant-list-item-meta-description {
+  font-size: 9px !important;
+}

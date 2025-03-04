@@ -1,0 +1,7 @@
+.card-container {
+  margin: 24px 0 !important;
+  min-height: 280px !important;
+  background: var(--bg-02) !important;
+  border-radius: 16px !important;
+  width: 100%;
+}

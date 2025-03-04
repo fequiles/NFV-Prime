@@ -1,0 +1,35 @@
+.aling-center {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0rem;
+}
+
+.traffic-form-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.double-inputs {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap !important;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.double-inputs > div {
+  width: 100%;
+}
+
+.button-submit {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.width-input {
+  width: 40% !important;
+}
