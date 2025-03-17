@@ -38,7 +38,7 @@ export default function AppClient() {
     try {
       let interfaces : IListInterface[] = await InterfaceService.search() as IListInterface[]
       // call service
-      if (interfaces.length < 2) {
+      if (interfaces.length < 1) {
         //if (interfacesList.length == 0) {
         //  await InterfaceService.start()
         //}

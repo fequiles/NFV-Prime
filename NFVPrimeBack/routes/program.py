@@ -37,9 +37,9 @@ def postClientProgram():
             thread.start()
             processPid = thread.join()
 
-            comando = "sudo python3 " + wdir + "/Arquivos/addProcessSniffer.py " + str(processPid)
-            thread = ThreadWithReturnValue(target=hl.executeProgramArmazenaPidPython, args=(conn, userId, comando, output_file, "process_sniffer", processName))
-            thread.start()
+            #comando = "sudo python3 " + wdir + "/Arquivos/addProcessSniffer.py " + str(processPid)
+            #thread = ThreadWithReturnValue(target=hl.executeProgramArmazenaPidPython, args=(conn, userId, comando, output_file, "process_sniffer", processName))
+            #thread.start()
 
             programs = pl.getPrograms(conn, userId)
 

@@ -40,47 +40,67 @@ def ipPacketData(data):
     header_size_bytes = (version & 15) * 4
     return ip_origin, ip_destiny, data[header_size_bytes:]
 
-def numberPacketsProcessed(n_transmitted, n_dropped, max_processed):
-    total =  n_transmitted + n_dropped
-    if total >= max_processed:
-        return 1
-    return 0
-
 def saveInfos():
     """Funcao que salva as informacoes obtidas pelo algoritmo em um arquivo .csv de saida"""
-    global n_dropped, n_transmitted, arquivoSaida
+    global n_dropped, n_transmitted, outputFile, n_dummy1, n_dummy2, n_dummy3
 
-    saida = '{}__{}'.format(n_transmitted, n_dropped)
-    arquivoSaida.write(saida)
-    arquivoSaida.close()
-    exit() 
+    saida = '{};{};{};{};{}\n'.format(n_transmitted, n_dropped, n_dummy1, n_dummy2, n_dummy3)
+    outputFile.write(saida)
+    outputFile.close()
+    semaphore.release()
+    exit()  
 
-def thread_Forwarder():
-    """ Thread do Forwarder que ao receber um pacote envia para o destino"""
-    global clientSocket, dropped, debug, n_transmitted, n_dropped
+def thread_LoadBalancer():
+    """ Thread do LeakyBucket que ao receber um pacote enfileira, 
+    transmite ou descarta o pacote, de acordo com seus parametros"""
+    global clientSocket, semaphore, debug, n_dropped, n_transmitted, n_dummy1, n_dummy2, n_dummy3, n_packet
+
     while 1:
         contentReceived = clientSocket.recv(65535)
         mac_destino, mac_fonte, protocolo, carga_util = unpackFrameEthernet(contentReceived)
         ipOrigem, ipDestino, dados = ipPacketData(carga_util)
+        if debug: 
+            total =  n_transmitted + n_dropped
+            if total >= 1000:
+                exit()
         if ipDestino == '10.0.1.101':
             print ("ipOrigem {} -> ipDestino {}".format(ipOrigem, ipDestino))
-            senderSocket.send(contentReceived)
-            if debug:
+            if (n_packet % 3 == 0):
+                senderSocket_h1.send(contentReceived)
+                if debug: n_dummy1 += 1
+            elif (n_packet % 3 == 1):
+                senderSocket_h2.send(contentReceived)
+                if debug: n_dummy2 += 1
+            elif (n_packet % 3 == 2):
+                senderSocket_h3.send(contentReceived)
+                if debug: n_dummy3 += 1
+            if debug: 
+                print("Transmitindo pacote")
                 n_transmitted += 1
-                if numberPacketsProcessed(n_transmitted, n_dropped, 500): saveInfos()
+                total =  n_transmitted + n_dropped
+                if total >= 1000:
+                    saveInfos()
+            n_packet += 1
+        semaphore.release()
 
-dropped = []
-
+interval = 1
 debug = 0
+n_packet = 0
 
 if debug:
     n_transmitted = 0
     n_dropped = 0
-    arquivoSaida = open('forwarder.csv', 'w')
+    n_dummy1= 0
+    n_dummy2= 0
+    n_dummy3 = 0
+    outputFile = open('/home/felipe/Desktop/testesMestrado/loadBalancerStateless.csv', 'a')
 
 clientSocket = socketStart('veth-ch0')
-senderSocket = socketStart('veth-h1')
+senderSocket_h1 = socketStart('veth-h1')
+senderSocket_h2 = socketStart('veth-h2')
+senderSocket_h3 = socketStart('veth-h3')
 
-forwarder = threading.Thread(target=thread_Forwarder, args=())
+semaphore = threading.Semaphore(1)
+load_balancer = threading.Thread(target=thread_LoadBalancer, args=())
 
-forwarder.start()
+load_balancer.start()

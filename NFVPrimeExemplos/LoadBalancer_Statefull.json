@@ -1,0 +1,39 @@
+{
+  "code": "import threading #thread module imported\nfrom socket import *\nimport struct\nimport binascii\nimport time\n\ndestinies = {}\n\ndef unpackFrameEthernet(frame):\n    destiny, origin, protocol = struct.unpack('! 6s 6s H', frame[:14])\n    return bytesToHexa(destiny), bytesToHexa(origin), htons(protocol), frame[14:]\n\ndef bytesToHexa(bytes_address):\n    hex_list = []\n    address = binascii.hexlify(bytes_address).decode(\"ascii\")\n    for i in range(0,12,2):\n        hex_list.append(address[i:i+2])\n    mac = \":\".join(hex_list)\n    return mac\n\ndef socketStart(net_interface):\n    Socket = socket(AF_PACKET, SOCK_RAW, htons(3))\n    Socket.bind((net_interface, 0))\n    return Socket\n\ndef ipPacketData(data):\n    ip_data_tuple = struct.unpack(\"!BBHHHBBH4s4s\", data[:20])\n    version = ip_data_tuple[0]\n    header_len = version >> 4\n    service_type = ip_data_tuple[1]\n    total_size = ip_data_tuple[2]\n    identifier = ip_data_tuple[3]\n    offset_fragment = ip_data_tuple[4]\n    life_time_ttl = ip_data_tuple[5]\n    protocols = ip_data_tuple[6]\n    checksum_header = ip_data_tuple[7]\n    ip_origin = inet_ntoa(ip_data_tuple[8])\n    ip_destiny = inet_ntoa(ip_data_tuple[9])\n\n    header_size_bytes = (version & 15) * 4\n    return ip_origin, ip_destiny, data[header_size_bytes:]\n\ndef dados_pacote_udp(carga):\n    tupla_dados_udp = struct.unpack('! H H H H', carga[:8])\n    porta_fonte = tupla_dados_udp[0]\n    porta_destino = tupla_dados_udp[1]\n    udp_len = tupla_dados_udp[2]\n    udp_checksum = tupla_dados_udp[3]\n    \n    return porta_fonte, porta_destino, udp_len, udp_checksum, carga[8:]\n\ndef saveInfos():\n    \"\"\"Funcao que salva as informacoes obtidas pelo algoritmo em um arquivo .csv de saida\"\"\"\n    global n_dropped, n_transmitted, outputFile, outputFileBucket, n_dummy1, n_dummy2, n_dummy3\n\n    saida = '{};{};{};{};{}\\n'.format(n_transmitted, n_dropped, n_dummy1, n_dummy2, n_dummy3)\n    outputFile.write(saida)\n    outputFileBucket.write('{};{};{};Finish;\\n'.format(b_dummy1, b_dummy2, b_dummy3))\n    outputFile.close()\n    semaphore.release()\n    outputFileBucket.close()\n    exit()  \n\ndef thread_Time(thread_name, interval):\n    \"\"\" Thread que reseta o consumo do bucket a cada intervalo de tempo\n        interval -> intervalo de tempo para que sejam adicionados os tokens\"\"\"\n    global semaphore, b_dummy1, b_dummy2, b_dummy3, n_transmitted, n_dropped, outputFileBucket\n    \n    while 1: #Ver condicao do while\n        # semaphore.acquire()\n        saida = '{};{};{};\\n'.format(b_dummy1, b_dummy2, b_dummy3)\n        outputFileBucket.write(saida)\n        b_dummy1 = 0\n        b_dummy2 = 0\n        b_dummy3 = 0\n        # semaphore.release()\n        time.sleep(interval)\n\ndef thread_LoadBalancer():\n    \"\"\" Thread do LeakyBucket que ao receber um pacote enfileira, \n    transmite ou descarta o pacote, de acordo com seus parametros\"\"\"\n    global clientSocket, semaphore, debug, n_dropped, n_transmitted, n_dummy1, n_dummy2, n_dummy3, n_packet, b_dummy1, b_dummy2, b_dummy3\n\n    n_traffics = 0\n    while 1:\n        contentReceived = clientSocket.recv(65535)\n        mac_destino, mac_fonte, protocolo, carga_util = unpackFrameEthernet(contentReceived)\n        ipOrigem, ipDestino, dados = ipPacketData(carga_util)\n        porta_fonte, porta_destino, udp_len, udp_checksum, carga = dados_pacote_udp(dados)\n        if debug: \n            total =  n_transmitted + n_dropped\n            if total >= 3750:\n                exit()\n        if '10.0.1.' in ipDestino:\n            semaphore.acquire()\n            packetSize = len(carga)\n            print (\"ipOrigem {} -> ipDestino {}\".format(ipOrigem, ipDestino))\n            ip_destiny_port = '{}_{}'.format(ipDestino, porta_destino)\n            if(destinies.get(ip_destiny_port)):\n                destinies[ip_destiny_port]['socket'].send(contentReceived)\n                if debug:\n                    if (destinies[ip_destiny_port]['socket'] == senderSocket_h1):\n                        n_dummy1 += 1\n                        b_dummy1 += packetSize\n                    elif (destinies[ip_destiny_port]['socket'] == senderSocket_h2):\n                        n_dummy2 += 1\n                        b_dummy2 += packetSize\n                    elif (destinies[ip_destiny_port]['socket'] == senderSocket_h3):\n                        n_dummy3 += 1\n                        b_dummy3 += packetSize\n            else:\n                if (n_traffics % 3 == 0):\n                    senderSocket_h1.send(contentReceived)\n                    destiny = {ip_destiny_port: {'socket': senderSocket_h1}}\n                    destinies.update(destiny)\n                    if debug:\n                        n_dummy1 += 1\n                        b_dummy1 += packetSize\n                elif (n_traffics % 3 == 1):\n                    senderSocket_h2.send(contentReceived)\n                    destiny = {ip_destiny_port: {'socket': senderSocket_h2 }}\n                    destinies.update(destiny)\n                    if debug:\n                        n_dummy2 += 1\n                        b_dummy2 += packetSize\n                elif (n_traffics % 3 == 2):\n                    senderSocket_h3.send(contentReceived)\n                    destiny = {ip_destiny_port: {'socket': senderSocket_h3}}\n                    destinies.update(destiny)\n                    if debug:\n                        n_dummy3 += 1\n                        b_dummy3 += packetSize\n                n_traffics += 1\n            if debug:\n                print(\"Transmitindo pacote\")\n                n_transmitted += 1\n                total =  n_transmitted + n_dropped\n                if total >= 3750:\n                    saveInfos()\n            n_packet += 1\n        semaphore.release()\n\ninterval = 1\ndebug = 1\nn_packet = 0\n\nif debug:\n    n_transmitted = 0\n    n_dropped = 0\n    n_dummy1= 0\n    n_dummy2= 0\n    n_dummy3 = 0\n    b_dummy1= 0\n    b_dummy2= 0\n    b_dummy3 = 0\n    outputFile = open('/tmp/loadBalancerStatefull.csv', 'a')\n    outputFileBucket = open('/tmp/loadBalancerStatefullList.csv', 'a')\n    timer = threading.Thread(target=thread_Time, args=('timer', interval))\n    timer.start()\n\nclientSocket = socketStart('veth-ch0')\nsenderSocket_h1 = socketStart('veth-h1')\nsenderSocket_h2 = socketStart('veth-h2')\nsenderSocket_h3 = socketStart('veth-h3')\n\nsemaphore = threading.Semaphore(1)\nload_balancer = threading.Thread(target=thread_LoadBalancer, args=())\n\nload_balancer.start()\n\n",
+  "interfacesNumber": 4,
+  "traffics": [
+    {
+      "name": "Cheetah",
+      "rate": 100,
+      "lenght": 10,
+      "count": 500,
+      "delay": 0,
+      "port": 8001,
+      "interface": 1,
+      "trigger": 0,
+      "type": "Automatic"
+    },
+    {
+      "name": "Elephant",
+      "rate": 5,
+      "lenght": 200,
+      "count": 500,
+      "delay": 0,
+      "port": 8001,
+      "interface": 1,
+      "trigger": 0,
+      "type": "Automatic"
+    },
+    {
+      "name": "Cheetah",
+      "rate": 100,
+      "lenght": 10,
+      "count": 100,
+      "delay": 0,
+      "port": 8001,
+      "interface": 1,
+      "trigger": 15,
+      "type": "Automatic"
+    }
+  ]
+}

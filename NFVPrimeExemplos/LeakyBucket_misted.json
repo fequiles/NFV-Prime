@@ -1,0 +1,39 @@
+{
+  "code": "import threading #thread module imported\nimport time #time module\nfrom socket import *\nimport struct\nimport binascii\n\ndef unpackFrameEthernet(frame):\n    destiny, origin, protocol = struct.unpack('! 6s 6s H', frame[:14])\n    return bytesToHexa(destiny), bytesToHexa(origin), htons(protocol), frame[14:]\n\ndef bytesToHexa(bytes_address):\n    hex_list = []\n    address = binascii.hexlify(bytes_address).decode(\"ascii\")\n    for i in range(0,12,2):\n        hex_list.append(address[i:i+2])\n    mac = \":\".join(hex_list)\n    return mac\n\ndef socketStart(net_interface):\n    Socket = socket(AF_PACKET, SOCK_RAW, htons(3))\n    Socket.bind((net_interface, 0))\n    return Socket\n\ndef ipPacketData(data):\n    ip_data_tuple = struct.unpack(\"!BBHHHBBH4s4s\", data[:20])\n    version = ip_data_tuple[0]\n    header_len = version >> 4\n    service_type = ip_data_tuple[1]\n    total_size = ip_data_tuple[2]\n    identifier = ip_data_tuple[3]\n    offset_fragment = ip_data_tuple[4]\n    life_time_ttl = ip_data_tuple[5]\n    protocols = ip_data_tuple[6]\n    checksum_header = ip_data_tuple[7]\n    ip_origin = inet_ntoa(ip_data_tuple[8])\n    ip_destiny = inet_ntoa(ip_data_tuple[9])\n\n    header_size_bytes = (version & 15) * 4\n    return ip_origin, ip_destiny, data[header_size_bytes:]\n\ndef analyzeBucket():\n    global bucket, outputFileBucket\n    \n    b_guepard = 0\n    b_elephant = 0\n    b_middle = 0\n    for packet in bucket:\n        if packet[1] <= 100:\n            b_guepard += 1\n        elif packet[1] >= 1000:\n            b_elephant += 1\n        elif packet[1] > 100 and packet[1] < 1000:\n            b_middle += 1\n    saida = '{};{};{};\\n'.format(b_guepard, b_elephant, b_middle)\n    outputFileBucket.write(saida)\n\ndef consumeBucket():\n    \"\"\"Funcao que consome o bucket de acordo com a quantidade de pacotes que sao consumidos a cada intervao de tempo\"\"\"\n    global bucket, packets_to_release, clientSocket, debug, n_transmitted, n_guepard, n_elephant, n_middle\n    if (len(bucket) == 0):\n        return\n    while (len(bucket) > 0) and (packets_to_release > 0):\n        semaphore.acquire()\n        contentReceived = bucket.pop(0)\n        senderSocket_h1.send(contentReceived[0])\n        print(contentReceived)\n        if debug: \n            print(\"Transmitindo pacote\")\n            if contentReceived[1] <= 100:\n                n_guepard += 1\n            elif contentReceived[1] >= 1000:\n                n_elephant += 1\n            elif contentReceived[1] > 100 and contentReceived[1] < 1000:\n                n_middle += 1\n            n_transmitted += 1\n            total =  n_transmitted + n_dropped\n            if total >= 3000:\n                saveInfos()\n        packets_to_release -= 1\n        semaphore.release()\n        \n\ndef thread_Time(thread_name, interval):\n    \"\"\" Thread que reseta o consumo do bucket a cada intervalo de tempo\n        interval -> intervalo de tempo para que sejam adicionados os tokens\"\"\"\n    global semaphore, packets_to_release, packets_to_release_value\n    while 1: #Ver condicao do while\n        semaphore.acquire()\n        packets_to_release = packets_to_release_value\n        semaphore.release()\n        analyzeBucket()\n        consumeBucket()\n        if debug: \n            total =  n_transmitted + n_dropped\n            if total >= 3000:\n                exit()\n        \n        time.sleep(interval)\n\ndef saveInfos():\n    \"\"\"Funcao que salva as informacoes obtidas pelo algoritmo em um arquivo .csv de saida\"\"\"\n    global n_dropped, n_transmitted, outputFile, n_guepard, n_elephant, n_middle\n\n    saida = '{};{};{};{};{};\\n'.format(n_transmitted, n_dropped, n_guepard, n_elephant, n_middle)\n    outputFile.write(saida)\n    outputFile.close()\n    outputFileBucket.close()\n    semaphore.release()\n    exit()  \n\ndef thread_LeakyBucket():\n    \"\"\" Thread do LeakyBucket que ao receber um pacote enfileira, \n    transmite ou descarta o pacote, de acordo com seus parametros\"\"\"\n    global clientSocket, packets_to_release, bucket, semaphore, bucket_max_size, debug, n_dropped, n_transmitted, n_guepard, n_elephant, n_middle\n\n    while 1:\n        contentReceived = clientSocket.recv(65535)\n        mac_destino, mac_fonte, protocolo, carga_util = unpackFrameEthernet(contentReceived)\n        ipOrigem, ipDestino, dados = ipPacketData(carga_util)\n        if debug: \n            total =  n_transmitted + n_dropped\n            if total >= 3000:\n                exit()\n        if len(bucket) > 0:\n            semaphore.acquire()\n            if len(bucket) < bucket_max_size:\n                if ipDestino == '10.0.1.101':\n                    if debug: \n                        print(\"Adicionou na fila e bucket nao vazio\")\n                    bucket.append([contentReceived, len(dados)])\n            else:\n                if debug: \n                    print(\"Mensagem dropada\")\n                    n_dropped += 1\n                    total =  n_transmitted + n_dropped\n                    if total >= 3000:\n                        saveInfos()\n        else:\n            semaphore.acquire()\n            if packets_to_release > 0:\n                if ipDestino == '10.0.1.101':\n                    print (\"ipOrigem {} -> ipDestino {}\".format(ipOrigem, ipDestino))\n                    senderSocket_h1.send(contentReceived)\n                    if debug: \n                        print(\"Transmitindo pacote\")\n                        if len(dados) <= 100:\n                            n_guepard += 1\n                        elif len(dados) >= 1000:\n                            n_elephant += 1\n                        elif len(dados) > 100 and len(dados) < 1000:\n                            n_middle += 1\n                        \n                        n_transmitted += 1\n                        total =  n_transmitted + n_dropped\n                        if total >= 3000:\n                            saveInfos()\n                    packets_to_release -= 1\n            else:\n                if ipDestino == '10.0.1.101':\n                    if debug: \n                        print(\"Adicionou na fila e bucket vazio\")\n                    bucket.append([contentReceived, len(dados)])\n        semaphore.release()\n\nbucket = []\n\npackets_to_release = 50\nbucket_max_size = 100\ninterval = 1\ndebug = 1\n\npackets_to_release_value = packets_to_release\n\nif debug:\n    n_transmitted = 0\n    n_dropped = 0\n    n_guepard= 0\n    n_elephant= 0\n    n_middle = 0\n    outputFile = open('/tmp/leakybucket-{}.csv'.format(packets_to_release_value), 'w')\n    outputFileBucket = open('/tmp/leakybucket-{}-bucket.csv'.format(packets_to_release_value), 'w')\n\nclientSocket = socketStart('veth-ch0')\nsenderSocket_h1 = socketStart('veth-h1')\n\nsemaphore = threading.Semaphore(1)\ntimer = threading.Thread(target=thread_Time, args=('timer', interval))\nleaky_bucket = threading.Thread(target=thread_LeakyBucket, args=())\n\ntimer.start()\nleaky_bucket.start()\n\n",
+  "interfacesNumber": 2,
+  "traffics": [
+    {
+      "name": "Cheetah",
+      "rate": 100,
+      "lenght": 16,
+      "count": 1000,
+      "delay": 0,
+      "port": 8001,
+      "interface": 1,
+      "trigger": 0,
+      "type": "Automatic"
+    },
+    {
+      "name": "Elephant",
+      "rate": 25,
+      "lenght": 1024,
+      "count": 1000,
+      "delay": 0,
+      "port": 8001,
+      "interface": 1,
+      "trigger": 0,
+      "type": "Automatic"
+    },
+    {
+      "name": "Middle",
+      "rate": 60,
+      "lenght": 256,
+      "count": 1000,
+      "delay": 0,
+      "port": 8001,
+      "interface": 1,
+      "trigger": 0,
+      "type": "Automatic"
+    }
+  ]
+}

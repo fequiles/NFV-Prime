@@ -14,6 +14,7 @@ Os requisitos mínimos (recomendações) para acessar localmente o NFV-Prime
     4. Usuário: permissões administrativas
     5. Google Chrome: Versão 126.0.6478.126
     6. Python: 3.8.10
+    7. NPing: 0.7.93
 
 ## Rodando localmente
 
@@ -44,9 +45,10 @@ source venv/bin/activate
 
 ```
 
-Instale os requisitos do Python3 no ambiente virtual
+Instale os requisitos do Python3 no ambiente virtual e o NPing para geração de tráfego
 ```bash
 pip3 install Flask Flask-Cors psycopg2-binary python-dotenv
+apt-get install nmap
 ```
 
 Inicialize o backend da aplicação
@@ -86,10 +88,6 @@ Verificar se alguma interface com prefixo "veth" não permaneceu ativa
 ```bash
 sudo ip link delete interface_name
 ```
-
-## Demonstração
-
-Segue abaixo um vídeo demo da plataforma NFV-Prime.
 
 
 ## Documentação NFV-Prime
