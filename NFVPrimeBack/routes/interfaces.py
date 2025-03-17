@@ -7,14 +7,19 @@ from lib.connection import conn
 import time
 import os
 import sys
+from dotenv import load_dotenv
+
+load_dotenv()     # this loads in the environment variables from the .env file
 
 interfaces_blueprint = Blueprint('interface', __name__)
+
+wdir = os.getenv("NFVPRIME_PATH")
 
 @interfaces_blueprint.route('/createInterface', methods=['POST'])
 def createInterface():
     req_data = request.get_json()
     if ((req_data != None) and (req_data != "")):
-        path = '../Arquivos/' + req_data["username"]
+        path = wdir + '/Arquivos/' + req_data["username"]
         if not os.path.isdir(path):
             os.mkdir(path)
         output_file = open(path + '/errorCriaDummy.txt', 'w+')
@@ -36,7 +41,7 @@ def createInterface():
         time.sleep(0.03)
 
         dummySnifferHost, dummySnifferNamespace = hl.dummySnifferProgram(newInterfaceHostName, newInterfaceHostIp, newInterfaceNamespaceName, newInterfaceNamespaceIp)
-        path = '../Arquivos/' + req_data["username"] + '/Sniffers'
+        path = wdir + '/Arquivos/' + req_data["username"] + '/Sniffers'
         if not os.path.isdir(path):
             os.mkdir(path)
     
@@ -44,7 +49,7 @@ def createInterface():
         snifferProgram.write(dummySnifferNamespace)
         snifferProgram.close()
 
-        comando = "sudo ip netns exec NFVPrime python3 /python-docker/Arquivos/"+ req_data["username"]+ "/Sniffers/sniffer_" + newInterfaceName + "_namespace.py"
+        comando = "sudo ip netns exec NFVPrime python3 " + wdir + "/Arquivos/"+ req_data["username"]+ "/Sniffers/sniffer_" + newInterfaceName + "_namespace.py"
         output_file = open(path + '/errorNamespaceSniffers.txt', 'w+')
 
         thread = ThreadWithReturnValue(target=hl.executeProgramArmazenaPidPython, args=(conn, userId, comando, output_file, "sniffer", "snif_" + newInterfaceName + "_ns"))

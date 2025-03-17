@@ -33,9 +33,10 @@ def getSamples(conn, userId):
 
     i = 1
     for row in rows:
+        print(row)
         program = {
             "title": row[filename],
-            "value": row[file].tobytes()
+            "value": row[file].tobytes().decode("utf-8")
         }
         programs.append(program)
         i += 1

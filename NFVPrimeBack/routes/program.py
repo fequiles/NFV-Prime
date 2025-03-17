@@ -8,14 +8,18 @@ from lib.connection import conn
 import time
 import os
 import sys
+from dotenv import load_dotenv
+
+load_dotenv()     # this loads in the environment variables from the .env file
 
 program_blueprint = Blueprint('program', __name__)
+wdir = os.getenv("NFVPRIME_PATH")
 
 @program_blueprint.route('/postProgram', methods=['POST'])
 def postClientProgram():
     req_data = request.get_json()
     if ((req_data != None) and (req_data != "")):
-        path = '../Arquivos/' + req_data["username"]
+        path = wdir + '/Arquivos/' + req_data["username"]
         if not os.path.isdir(path):
             os.mkdir(path)
         received_file = open(path + '/program.py', 'w')
@@ -26,14 +30,14 @@ def postClientProgram():
             program = hl.nfvHeaderWrite(req_data["code"], list(interfaces.values()))
             received_file.write(program)
             received_file.close()
-            comando = "sudo python3 /python-docker/Arquivos/"+ req_data["username"]+ "/program.py"
+            comando = "sudo python3 " + wdir + "/Arquivos/"+ req_data["username"]+ "/program.py"
 
             processName = req_data["processName"]
             thread = ThreadWithReturnValue(target=hl.executeProgramArmazenaPidPython, args=(conn, userId, comando, output_file, "program", processName))
             thread.start()
             processPid = thread.join()
 
-            comando = "sudo python3 /python-docker/Arquivos/addProcessSniffer.py " + str(processPid)
+            comando = "sudo python3 " + wdir + "/Arquivos/addProcessSniffer.py " + str(processPid)
             thread = ThreadWithReturnValue(target=hl.executeProgramArmazenaPidPython, args=(conn, userId, comando, output_file, "process_sniffer", processName))
             thread.start()
 

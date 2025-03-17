@@ -17,17 +17,21 @@ from lib.connection import conn
 from routes.traffic import traffic_blueprint
 from routes.interfaces import interfaces_blueprint
 from routes.program import program_blueprint
+from dotenv import load_dotenv
+
+load_dotenv()     # this loads in the environment variables from the .env file
 
 #Global vars
 listProcess = {}
+
+wdir = os.getenv("NFVPRIME_PATH")
 
 process = subprocess.Popen('sh config_NFV_Prime.sh', shell=True)
 process.wait()
 process = subprocess.Popen('sh config_NFV_Client.sh', shell=True)
 process.wait()
-clientSniffer = 'ip netns exec NFV-client python3 /python-docker/Arquivos/dummySnifferClient.py'
-path = '/python-docker/Arquivos/sniffers'
-output_file = open(path + '/errorClientSniffers.txt', 'w+')
+clientSniffer = 'ip netns exec NFV-client python3 ' + wdir + '/Arquivos/dummySnifferClient.py'
+output_file = open(wdir + '/Arquivos/sniffers/errorClientSniffers.txt', 'w+')
 thread = ThreadWithReturnValue(target=hl.executeProgramArmazenaPid, args=(conn, 0, clientSniffer, output_file, "sniffer_client", "snif_client"))
 thread.start()
 
@@ -87,12 +91,12 @@ def stopAllProcesses():
 def iniciaGraficos():
     req_data = request.get_json()
     if ((req_data != None) and (req_data != "")):
-        path = '../Arquivos/' + req_data["username"]
+        path = wdir + '/Arquivos/' + req_data["username"]
         if not os.path.isdir(path):
             os.mkdir(path)
         userId = ll.getUserIdByUsername(conn, req_data)
         output_file = open(path + '/output.txt', 'w+')
-        comando = "sudo python3 /python-docker/Arquivos/networkSniffer.py"
+        comando = "sudo python3 "+ wdir+ "/Arquivos/networkSniffer.py"
 
         thread = ThreadWithReturnValue(target=hl.executeProgramArmazenaPidPython, args=(conn, userId, comando, output_file, "graphics", "sniffer_graphics"))
         thread.start()

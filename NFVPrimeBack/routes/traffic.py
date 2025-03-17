@@ -6,14 +6,19 @@ import lib.trafficLibs as tl
 import os
 from lib.threadingLibs import ThreadWithReturnValue
 from lib.connection import conn
+from dotenv import load_dotenv
+
+load_dotenv()     # this loads in the environment variables from the .env file
 
 traffic_blueprint = Blueprint('traffic', __name__)
+
+wdir = os.getenv("NFVPRIME_PATH")
 
 @traffic_blueprint.route('/postTrafficMode', methods=['POST'])
 def postTrafficMode():
     req_data = request.get_json()
     if ((req_data != None) and (req_data != "")):
-        path = '../Arquivos/' + req_data["username"]
+        path = wdir + '/Arquivos/' + req_data["username"]
         if not os.path.isdir(path):
             os.mkdir(path)
         output_file = open(path + '/nping_output.txt', 'w+')
@@ -35,7 +40,7 @@ def postTrafficMode():
             thread.join()
         else:
             tgid = tl.getMaxTrafficsGenerator(conn, userId)
-            path = '../Arquivos/' + req_data["username"] + '/Traffics'
+            path = wdir + '/Arquivos/' + req_data["username"] + '/Traffics'
             if not os.path.isdir(path):
                 os.mkdir(path)
             output_file = open(path + '/trafficslogs.txt', 'w+')
@@ -44,7 +49,7 @@ def postTrafficMode():
             received_file.write(req_data['code'])
             received_file.close()
 
-            comando = "sudo ip netns exec NFV-client python3 /python-docker/Arquivos/"+ req_data["username"]+ "/Traffics/{}".format(filename)
+            comando = "sudo ip netns exec NFV-client python3 " + wdir + "/Arquivos/"+ req_data["username"]+ "/Traffics/{}".format(filename)
 
             processName = '{}_{}'.format(req_data["name"], tgid)
             thread = ThreadWithReturnValue(target=hl.executeProgramArmazenaPidPython, args=(conn, userId, comando, output_file, "traffic_p", processName))

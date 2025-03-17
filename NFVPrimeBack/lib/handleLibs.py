@@ -2,6 +2,11 @@ import subprocess
 import os
 import signal
 import lib.interfaceLibs as il
+from dotenv import load_dotenv
+
+load_dotenv()     # this loads in the environment variables from the .env file
+
+wdir = os.getenv("NFVPRIME_PATH")
 
 def interfaceReplace(program_txt, dummies):
     print(dummies)
@@ -12,7 +17,7 @@ def interfaceReplace(program_txt, dummies):
     return program_txt
 
 def nfvHeaderWrite(program_txt, dummies):
-    header = open("../Arquivos/lib/header.txt", "r")
+    header = open(wdir + "/Arquivos/lib/header.txt", "r")
     header_content = header.read()
     new_program = header_content + program_txt
     new_program = interfaceReplace(new_program, dummies)
@@ -23,8 +28,8 @@ def dummySnifferProgram(hostName, hostIp, namespaceName, namespaceIp):
     # snifferDummyProgram = snifferDummyFile.read()
     # snifferDummyProgram = snifferDummyProgram.replace(":dummyIp", "\"" + ip + "\"")
 
-    snifferDummyHostFile = open("../Arquivos/dummySnifferMaskHost.py", "r")
-    snifferDummyNamespaceFile = open("../Arquivos/dummySnifferMaskNamespace.py", "r")
+    snifferDummyHostFile = open(wdir + "/Arquivos/dummySnifferMaskHost.py", "r")
+    snifferDummyNamespaceFile = open(wdir + "/Arquivos/dummySnifferMaskNamespace.py", "r")
 
     snifferDummyHostProgram = snifferDummyHostFile.read()
     snifferDummyHostProgram = snifferDummyHostProgram.replace(":dummyHostName", "\"" + hostName + "\"")

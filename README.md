@@ -37,19 +37,21 @@ Após, em outro terminal, acesse a pasta do backend da aplicação
 cd NFVPrimeBack
 ```
 
-Crie uma instância virtual do Python3
+Crie uma instância virtual do Python3 e ativa a mesma
 ```bash
 python3 -m venv venv
+source venv/bin/activate
+
 ```
 
 Instale os requisitos do Python3 no ambiente virtual
 ```bash
-pip3 install -r requirements.txt
+pip3 install Flask Flask-Cors psycopg2-binary python-dotenv
 ```
 
 Inicialize o backend da aplicação
 ```bash
-sudo python3 main.py
+sudo venv/bin/python3 main.py
 ```
 
 A partir da raiz, acesse a pasta do frontend da aplicação
@@ -70,31 +72,20 @@ npm run dev
 Por fim, o acesse a plataforma
 https://localhost:3000
 
+## Finalizando execução
 
-Clone o projeto
+Pode ser necessário limpar alguns dados, como:
 
+Remover os netns
 ```bash
-  git clone https://github.com/fequiles/NFV-Prime.git
+sudo ip netns delete NFVPrime
+sudo ip netns delete NFV-client
 ```
 
-Entre no diretório do projeto
-
+Verificar se alguma interface com prefixo "veth" não permaneceu ativa
 ```bash
-  cd NFV-Prime
+sudo ip link delete interface_name
 ```
-
-No diretório do projeto, será necessário subir o docker do banco de dados, instância do postgres, que a plataforma NFV-Prime utilizará para armazenamento e consulta de dados, sendo necessário executar em um terminal: 
-
-    $ sudo docker-compose -f docker-compose-postgres.yml up --build
-
-Após, em outro terminal, é necessário executar o docker-compose para inicializar a aplicação Web da NFV-Prime e o backend da plataforma:
-
-    $ sudo docker-compose -f docker-compose.yml up --build
-
-Por fim, o acesso a plataforma ocorre através do link:
-
-    https://localhost:23621
-
 
 ## Demonstração
 
