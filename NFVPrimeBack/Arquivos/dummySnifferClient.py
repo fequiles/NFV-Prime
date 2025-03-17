@@ -104,7 +104,7 @@ def cleanInterfacesRxTx():
 
 def insertOnDatabase():
     curs_obj = conn.cursor()
-    curs_obj.execute("INSERT INTO user_interfaces(user_id, interface_id, interface_name, interface_host, interface_host_ip, interface_namespace_name, interface_namespace_ip, interface_host_ethernet, interface_ns_ethernet) VALUES(%s, %s, %s, %s, %s, %s , %s, %s, %s) ON CONFLICT (user_id, interface_id,) DO NOTHING", (0, 0, 'client', 'veth-ch0', '10.2.1.100', 'veth-cn0', '10.2.2.100', '16:1a:a7:f2:ac:36', '16:1a:a7:f2:ac:37'))
+    curs_obj.execute("INSERT INTO user_interfaces(user_id, interface_id, interface_name, interface_host, interface_host_ip, interface_namespace_name, interface_namespace_ip, interface_host_ethernet, interface_ns_ethernet) VALUES(%s, %s, %s, %s, %s, %s , %s, %s, %s) ON CONFLICT (user_id, interface_id) DO NOTHING", (0, 0, 'client', 'veth-ch0', '10.2.1.100', 'veth-cn0', '10.2.2.100', '16:1a:a7:f2:ac:36', '16:1a:a7:f2:ac:37'))
     conn.commit()
     curs_obj.close()
 
