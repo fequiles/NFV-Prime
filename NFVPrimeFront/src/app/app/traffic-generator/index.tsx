@@ -313,7 +313,7 @@ export default function TrafficGenerator({
               onClick={onSubmit}
               disabled={started}
             >
-              Add to List of Traffic to Generate
+              Add Traffic to the List
             </Button>
           </div>
         </Card>

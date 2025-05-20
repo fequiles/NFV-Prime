@@ -5,6 +5,9 @@ import threading #thread module imported
 from socket import *
 import struct
 import binascii
+import time
+
+destinies = {}
 
 def unpackFrameEthernet(frame):
     destiny, origin, protocol = struct.unpack('! 6s 6s H', frame[:14])
@@ -40,51 +43,104 @@ def ipPacketData(data):
     header_size_bytes = (version & 15) * 4
     return ip_origin, ip_destiny, data[header_size_bytes:]
 
+def dados_pacote_udp(carga):
+    tupla_dados_udp = struct.unpack('! H H H H', carga[:8])
+    porta_fonte = tupla_dados_udp[0]
+    porta_destino = tupla_dados_udp[1]
+    udp_len = tupla_dados_udp[2]
+    udp_checksum = tupla_dados_udp[3]
+    
+    return porta_fonte, porta_destino, udp_len, udp_checksum, carga[8:]
+
 def saveInfos():
     """Funcao que salva as informacoes obtidas pelo algoritmo em um arquivo .csv de saida"""
-    global n_dropped, n_transmitted, outputFile, n_dummy1, n_dummy2, n_dummy3
+    global n_dropped, n_transmitted, outputFile, outputFileBucket, n_dummy1, n_dummy2, n_dummy3
 
     saida = '{};{};{};{};{}\n'.format(n_transmitted, n_dropped, n_dummy1, n_dummy2, n_dummy3)
     outputFile.write(saida)
+    outputFileBucket.write('Finish')
     outputFile.close()
     semaphore.release()
+    outputFileBucket.close()
     exit()  
+
+def thread_Time(thread_name, interval):
+    """ Thread que reseta o consumo do bucket a cada intervalo de tempo
+        interval -> intervalo de tempo para que sejam adicionados os tokens"""
+    global semaphore, b_dummy1, b_dummy2, b_dummy3, n_transmitted, n_dropped, outputFileBucket
+    
+    while 1: #Ver condicao do while
+        # semaphore.acquire()
+        saida = '{};{};{};\n'.format(b_dummy1, b_dummy2, b_dummy3)
+        outputFileBucket.write(saida)
+        b_dummy1 = 0
+        b_dummy2 = 0
+        b_dummy3 = 0
+        # semaphore.release()
+        time.sleep(interval)
 
 def thread_LoadBalancer():
     """ Thread do LeakyBucket que ao receber um pacote enfileira, 
     transmite ou descarta o pacote, de acordo com seus parametros"""
-    global clientSocket, semaphore, debug, n_dropped, n_transmitted, n_dummy1, n_dummy2, n_dummy3, n_packet
+    global clientSocket, semaphore, debug, n_dropped, n_transmitted, n_dummy1, n_dummy2, n_dummy3, n_packet, b_dummy1, b_dummy2, b_dummy3
 
+    n_traffics = 0
     while 1:
         contentReceived = clientSocket.recv(65535)
         mac_destino, mac_fonte, protocolo, carga_util = unpackFrameEthernet(contentReceived)
         ipOrigem, ipDestino, dados = ipPacketData(carga_util)
+        porta_fonte, porta_destino, udp_len, udp_checksum, carga = dados_pacote_udp(dados)
         if debug: 
             total =  n_transmitted + n_dropped
-            if total >= 1000:
+            if total >= 3750:
                 exit()
-        if ipDestino == '10.0.1.101':
+        if '10.0.1.' in ipDestino:
+            semaphore.acquire()
+            packetSize = len(carga)
             print ("ipOrigem {} -> ipDestino {}".format(ipOrigem, ipDestino))
-            if (n_packet % 3 == 0):
-                senderSocket_h1.send(contentReceived)
-                if debug: n_dummy1 += 1
-            elif (n_packet % 3 == 1):
-                senderSocket_h2.send(contentReceived)
-                if debug: n_dummy2 += 1
-            elif (n_packet % 3 == 2):
-                senderSocket_h3.send(contentReceived)
-                if debug: n_dummy3 += 1
-            if debug: 
+            ip_destiny_port = '{}_{}'.format(ipDestino, porta_destino)
+            if(destinies.get(ip_destiny_port)):
+                destinies[ip_destiny_port]['socket'].send(contentReceived)
+                if (destinies[ip_destiny_port]['socket'] == senderSocket_h1):
+                    n_dummy1 += 1
+                    b_dummy1 += packetSize
+                elif (destinies[ip_destiny_port]['socket'] == senderSocket_h2):
+                    n_dummy2 += 1
+                    b_dummy2 += packetSize
+                elif (destinies[ip_destiny_port]['socket'] == senderSocket_h3):
+                    n_dummy3 += 1
+                    b_dummy3 += packetSize
+            else:
+                if (n_traffics % 3 == 0):
+                    senderSocket_h1.send(contentReceived)
+                    destiny = {ip_destiny_port: {'socket': senderSocket_h1}}
+                    destinies.update(destiny)
+                    n_dummy1 += 1
+                    b_dummy1 += packetSize
+                elif (n_traffics % 3 == 1):
+                    senderSocket_h2.send(contentReceived)
+                    destiny = {ip_destiny_port: {'socket': senderSocket_h2 }}
+                    destinies.update(destiny)
+                    n_dummy2 += 1
+                    b_dummy2 += packetSize
+                elif (n_traffics % 3 == 2):
+                    senderSocket_h3.send(contentReceived)
+                    destiny = {ip_destiny_port: {'socket': senderSocket_h3}}
+                    destinies.update(destiny)
+                    n_dummy3 += 1
+                    b_dummy3 += packetSize
+            if debug:
                 print("Transmitindo pacote")
                 n_transmitted += 1
                 total =  n_transmitted + n_dropped
-                if total >= 1000:
+                if total >= 3750:
                     saveInfos()
             n_packet += 1
+            n_traffics += 1
         semaphore.release()
 
 interval = 1
-debug = 0
+debug = 1
 n_packet = 0
 
 if debug:
@@ -93,7 +149,13 @@ if debug:
     n_dummy1= 0
     n_dummy2= 0
     n_dummy3 = 0
-    outputFile = open('/home/felipe/Desktop/testesMestrado/loadBalancerStateless.csv', 'a')
+    b_dummy1= 0
+    b_dummy2= 0
+    b_dummy3 = 0
+    outputFile = open('/home/felipe/Desktop/testesMestrado/loadBalancerStatefull.csv', 'a')
+    outputFileBucket = open('/home/felipe/Desktop/testesMestrado/loadBalancerStatefullList.csv', 'a')
+    timer = threading.Thread(target=thread_Time, args=('timer', interval))
+    timer.start()
 
 clientSocket = socketStart('veth-ch0')
 senderSocket_h1 = socketStart('veth-h1')
@@ -104,3 +166,4 @@ semaphore = threading.Semaphore(1)
 load_balancer = threading.Thread(target=thread_LoadBalancer, args=())
 
 load_balancer.start()
+

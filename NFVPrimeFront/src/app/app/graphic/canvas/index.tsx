@@ -73,7 +73,7 @@ export default function Canvas({ form, interfaceMode }: IProps) {
           x: {
             title: {
               display: true,
-              text: "segundos",
+              text: "seconds",
             },
           },
           y: {

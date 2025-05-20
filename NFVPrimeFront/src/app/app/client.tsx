@@ -102,7 +102,7 @@ export default function AppClient() {
     },
     {
       key: '5',
-      label: 'Visualization',
+      label: 'Visualization Module',
       children: <Graphic interfacesList={interfacesList} />
     },
   ];

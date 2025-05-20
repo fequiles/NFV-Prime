@@ -49,7 +49,7 @@ def postTrafficMode():
             received_file.write(req_data['code'])
             received_file.close()
 
-            comando = "sudo ip netns exec NFV-client python3 " + wdir + "/Arquivos/"+ req_data["username"]+ "/Traffics/{}".format(filename)
+            comando = "sudo ip netns exec NFV-client " + wdir + "/venv/bin/python3" + "" + wdir + "/Arquivos/"+ req_data["username"]+ "/Traffics/{}".format(filename)
 
             processName = '{}_{}'.format(req_data["name"], tgid)
             thread = ThreadWithReturnValue(target=hl.executeProgramArmazenaPidPython, args=(conn, userId, comando, output_file, "traffic_p", processName))

@@ -74,7 +74,7 @@ export default function InterfaceTraffic({ listTraffic, setListTraffic, form, se
 
   return (
     <>
-      <span>List of Traffics to Generate</span>
+      <span>List of Traffics</span>
       <List
         className="demo-loadmore-list"
         itemLayout="horizontal"

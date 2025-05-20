@@ -30,7 +30,7 @@ process = subprocess.Popen('sh config_NFV_Prime.sh', shell=True)
 process.wait()
 process = subprocess.Popen('sh config_NFV_Client.sh', shell=True)
 process.wait()
-clientSniffer = 'ip netns exec NFV-client python3 ' + wdir + '/Arquivos/dummySnifferClient.py'
+clientSniffer = "ip netns exec NFV-client " + wdir + "/venv/bin/python3" + "" + wdir + '/Arquivos/dummySnifferClient.py'
 output_file = open(wdir + '/Arquivos/sniffers/errorClientSniffers.txt', 'w+')
 thread = ThreadWithReturnValue(target=hl.executeProgramArmazenaPid, args=(conn, 0, clientSniffer, output_file, "sniffer_client", "snif_client"))
 thread.start()
@@ -96,7 +96,7 @@ def iniciaGraficos():
             os.mkdir(path)
         userId = ll.getUserIdByUsername(conn, req_data)
         output_file = open(path + '/output.txt', 'w+')
-        comando = "sudo python3 "+ wdir+ "/Arquivos/networkSniffer.py"
+        comando = "sudo + " wdir + "/venv/bin/python3" + ""+ wdir+ "/Arquivos/networkSniffer.py"
 
         thread = ThreadWithReturnValue(target=hl.executeProgramArmazenaPidPython, args=(conn, userId, comando, output_file, "graphics", "sniffer_graphics"))
         thread.start()

@@ -100,7 +100,7 @@ export default function LayoutPage({ children }: IProps) {
           backgroundColor: 'white',
           textAlign: 'center',
         }}>
-          NFV-Prime © {new Date().getFullYear()} Created by Felipe Quiles 
+          NFV-Prime © {new Date().getFullYear()} Created by Felipe Quiles, Vinícius Fülber e Elias Duarte Jr. 
         </Footer>
       </Layout>
   );

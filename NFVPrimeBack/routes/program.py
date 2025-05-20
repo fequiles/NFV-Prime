@@ -30,14 +30,14 @@ def postClientProgram():
             program = hl.nfvHeaderWrite(req_data["code"], list(interfaces.values()))
             received_file.write(program)
             received_file.close()
-            comando = "sudo python3 " + wdir + "/Arquivos/"+ req_data["username"]+ "/program.py"
+            comando = "sudo " + wdir + "/venv/bin/python3" + "" + wdir + "/Arquivos/"+ req_data["username"]+ "/program.py"
 
             processName = req_data["processName"]
             thread = ThreadWithReturnValue(target=hl.executeProgramArmazenaPidPython, args=(conn, userId, comando, output_file, "program", processName))
             thread.start()
             processPid = thread.join()
 
-            #comando = "sudo python3 " + wdir + "/Arquivos/addProcessSniffer.py " + str(processPid)
+            #comando = "sudo + " wdir + "/venv/bin/python3" + "" + wdir + "/Arquivos/addProcessSniffer.py " + str(processPid)
             #thread = ThreadWithReturnValue(target=hl.executeProgramArmazenaPidPython, args=(conn, userId, comando, output_file, "process_sniffer", processName))
             #thread.start()
 
