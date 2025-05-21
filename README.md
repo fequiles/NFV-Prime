@@ -14,7 +14,11 @@ Os requisitos mínimos (recomendações) para acessar localmente o NFV-Prime
     4. Usuário: permissões administrativas
     5. Google Chrome: Versão 126.0.6478.126
     6. Python: 3.8.10
-    7. NPing: 0.7.93
+    7. Python-venv: 
+    8. NPing: 0.7.93
+    9. Net-Tools: 2.10-alpha
+    10. NPM: 9.2.0
+    11. Nodejs: 19.4.0
 
 ## Rodando localmente
 
@@ -89,6 +93,11 @@ Verificar se alguma interface com prefixo "veth" não permaneceu ativa
 sudo ip link delete interface_name
 ```
 
+Reiniciar o banco de dados, pode ter dados corrompidos. Na raiz do projeto execute:
+```bash
+sudo docker-compose -f docker-compose-postgres.yml down
+sudo rm -rf nfvprime_postgres
+```
 
 ## Documentação NFV-Prime
 
